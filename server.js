@@ -705,7 +705,16 @@ app.post("/v1/chat/completions", async (req, reply) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.TARGET_API_KEY}`
       },
-      body: JSON.stringify({ ...body, messages: llmMessages })
+      body: JSON.stringify({
+  ...body,
+  messages: llmMessages,
+  tools: (body.tools || []).map(tool => {
+    if (tool.function && (!tool.function.parameters || tool.function.parameters.type !== 'object')) {
+      tool.function.parameters = { type: "object", properties: {} };
+    }
+    return tool;
+  })
+})
     });
 
     const upstreamContentType = response.headers.get("content-type") || "";
